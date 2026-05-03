@@ -1,0 +1,86 @@
+{
+  "holdings": [
+    {
+      "symbol": "CVX",
+      "name": "Cedear Chevron Corp.",
+      "type": "CEDEAR",
+      "yfinance_ticker": "CVX",
+      "cedear_ratio": 4,
+      "quantity": 0,
+      "avg_price_ars": 0.0,
+      "notes": "Completar: quantity = cantidad de CEDEARs que tenés; avg_price_ars = precio promedio de compra por CEDEAR en ARS"
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Cedear Alphabet Inc.",
+      "type": "CEDEAR",
+      "yfinance_ticker": "GOOGL",
+      "cedear_ratio": 10,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    },
+    {
+      "symbol": "MRVL",
+      "name": "Cedear Marvell Technology",
+      "type": "CEDEAR",
+      "yfinance_ticker": "MRVL",
+      "cedear_ratio": 1,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Cedear Microsoft Corp.",
+      "type": "CEDEAR",
+      "yfinance_ticker": "MSFT",
+      "cedear_ratio": 1,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    },
+    {
+      "symbol": "NVDA",
+      "name": "Cedear Nvidia Corporation",
+      "type": "CEDEAR",
+      "yfinance_ticker": "NVDA",
+      "cedear_ratio": 10,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    },
+    {
+      "symbol": "SPY",
+      "name": "Cedear SPDR S&P 500",
+      "type": "CEDEAR",
+      "yfinance_ticker": "SPY",
+      "cedear_ratio": 10,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Cedear Tesla Inc.",
+      "type": "CEDEAR",
+      "yfinance_ticker": "TSLA",
+      "cedear_ratio": 10,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    },
+    {
+      "symbol": "VIST",
+      "name": "Cedear Vista Oil & Gas",
+      "type": "CEDEAR",
+      "yfinance_ticker": "VIST",
+      "cedear_ratio": 1,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    },
+    {
+      "symbol": "YPFD",
+      "name": "YPF S.A.",
+      "type": "LOCAL_STOCK",
+      "yfinance_ticker": "YPFD.BA",
+      "cedear_ratio": null,
+      "quantity": 0,
+      "avg_price_ars": 0.0
+    }
+  ]
+}
