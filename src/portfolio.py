@@ -1,31 +1,34 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
 class Holding:
     symbol: str
     name: str
-    type: str                      # "CEDEAR" | "LOCAL_STOCK"
+    type: str               # "CEDEAR" | "LOCAL_STOCK"
     yfinance_ticker: str
-    cedear_ratio: Optional[int]
-    quantity: int
-    avg_price_ars: float
+    value_ars: float        # valor actual de la posición en ARS (de la app)
+    return_pct: float       # rendimiento acumulado en % (de la app)
 
     @property
     def cost_basis_ars(self) -> float:
-        return self.quantity * self.avg_price_ars
+        # Invertimos el rendimiento para obtener el costo original
+        return self.value_ars / (1 + self.return_pct / 100)
 
     @property
-    def is_cedear(self) -> bool:
-        return self.type == "CEDEAR"
+    def unrealised_ars(self) -> float:
+        return self.value_ars - self.cost_basis_ars
 
 
 @dataclass
 class Portfolio:
     holdings: list
+
+    @property
+    def total_value_ars(self) -> float:
+        return sum(h.value_ars for h in self.holdings)
 
     @property
     def total_cost_basis_ars(self) -> float:
@@ -38,17 +41,16 @@ def load_portfolio(path: Path) -> Portfolio:
 
     holdings = []
     for item in data["holdings"]:
-        required = ["symbol", "name", "type", "yfinance_ticker", "quantity", "avg_price_ars"]
+        required = ["symbol", "name", "type", "yfinance_ticker", "value_ars", "return_pct"]
         missing = [k for k in required if k not in item]
         if missing:
-            raise ValueError(f"Holding '{item.get('symbol', '?')}' missing fields: {missing}")
+            raise ValueError(f"Holding '{item.get('symbol', '?')}' falta: {missing}")
         holdings.append(Holding(
             symbol=item["symbol"],
             name=item["name"],
             type=item["type"],
             yfinance_ticker=item["yfinance_ticker"],
-            cedear_ratio=item.get("cedear_ratio"),
-            quantity=item["quantity"],
-            avg_price_ars=item["avg_price_ars"],
+            value_ars=item["value_ars"],
+            return_pct=item["return_pct"],
         ))
     return Portfolio(holdings=holdings)

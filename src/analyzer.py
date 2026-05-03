@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 from zoneinfo import ZoneInfo
 
-from src.portfolio import Portfolio, Holding
+from src.portfolio import Portfolio
 from src.market_data import TickerData
 from src.fx_rate import FXRate
 
@@ -15,23 +14,17 @@ class HoldingResult:
     symbol: str
     name: str
     ticker: str
-    quantity: int
-    # Prices
-    prev_price_ars: float
-    current_price_ars: float
-    # Daily
+    # Valores en ARS
+    ref_value_ars: float        # valor de referencia (portfolio.json)
+    current_value_ars: float    # estimado con cambio del día aplicado
     daily_change_pct: float
     daily_change_ars: float
-    # Values
-    prev_value_ars: float
-    current_value_ars: float
-    # Unrealised P&L vs cost basis
+    # P&L acumulado
     cost_basis_ars: float
     unrealised_ars: float
     unrealised_pct: float
-    # Portfolio weight
+    # Peso en el portfolio
     weight_pct: float = 0.0
-    # Whether price data was available
     data_available: bool = True
 
 
@@ -39,7 +32,7 @@ class HoldingResult:
 class PortfolioResult:
     holdings: list
     total_current_ars: float
-    total_prev_ars: float
+    total_ref_ars: float
     total_daily_change_ars: float
     total_daily_change_pct: float
     total_cost_basis_ars: float
@@ -48,15 +41,6 @@ class PortfolioResult:
     ccl_rate: float
     ccl_source: str
     timestamp: str
-
-
-def _estimate_ars_price(
-    price_usd: float,
-    ccl_rate: float,
-    cedear_ratio: Optional[int],
-) -> float:
-    ratio = cedear_ratio if cedear_ratio and cedear_ratio > 0 else 1
-    return price_usd * ccl_rate / ratio
 
 
 def analyse_portfolio(
@@ -71,53 +55,40 @@ def analyse_portfolio(
         price = td.price if td else None
 
         if price and price.available:
-            if h.type == "LOCAL_STOCK":
-                prev_price_ars = price.prev_close
-                current_price_ars = price.current_close
-            else:
-                prev_price_ars = _estimate_ars_price(price.prev_close, fx.usd_ars, h.cedear_ratio)
-                current_price_ars = _estimate_ars_price(price.current_close, fx.usd_ars, h.cedear_ratio)
-
-            prev_value = h.quantity * prev_price_ars
-            current_value = h.quantity * current_price_ars
-            daily_change_ars = current_value - prev_value
-            daily_change_pct = price.change_pct
+            # Aplicamos el % de cambio del día sobre el valor de referencia en ARS
+            daily_pct = price.change_pct
+            daily_ars = h.value_ars * (daily_pct / 100)
+            current_value = h.value_ars + daily_ars
             data_ok = True
         else:
-            prev_price_ars = h.avg_price_ars
-            current_price_ars = h.avg_price_ars
-            prev_value = h.cost_basis_ars
-            current_value = h.cost_basis_ars
-            daily_change_ars = 0.0
-            daily_change_pct = 0.0
+            daily_pct = 0.0
+            daily_ars = 0.0
+            current_value = h.value_ars
             data_ok = False
 
         cost = h.cost_basis_ars
         unrealised = current_value - cost
-        unrealised_pct = (unrealised / cost * 100) if cost > 0 else 0.0
+        unrealised_pct = (unrealised / cost * 100) if cost != 0 else 0.0
 
         results.append(HoldingResult(
             symbol=h.symbol,
             name=h.name,
             ticker=h.yfinance_ticker,
-            quantity=h.quantity,
-            prev_price_ars=prev_price_ars,
-            current_price_ars=current_price_ars,
-            daily_change_pct=daily_change_pct,
-            daily_change_ars=daily_change_ars,
-            prev_value_ars=prev_value,
+            ref_value_ars=h.value_ars,
             current_value_ars=current_value,
+            daily_change_pct=daily_pct,
+            daily_change_ars=daily_ars,
             cost_basis_ars=cost,
             unrealised_ars=unrealised,
             unrealised_pct=unrealised_pct,
             data_available=data_ok,
         ))
 
+    total_ref = sum(r.ref_value_ars for r in results)
     total_current = sum(r.current_value_ars for r in results)
-    total_prev = sum(r.prev_value_ars for r in results)
     total_cost = sum(r.cost_basis_ars for r in results)
-    total_daily = total_current - total_prev
-    total_daily_pct = (total_daily / total_prev * 100) if total_prev > 0 else 0.0
+    total_daily = total_current - total_ref
+    total_daily_pct = (total_daily / total_ref * 100) if total_ref > 0 else 0.0
     total_unrealised = total_current - total_cost
     total_unrealised_pct = (total_unrealised / total_cost * 100) if total_cost > 0 else 0.0
 
@@ -127,7 +98,7 @@ def analyse_portfolio(
     return PortfolioResult(
         holdings=results,
         total_current_ars=total_current,
-        total_prev_ars=total_prev,
+        total_ref_ars=total_ref,
         total_daily_change_ars=total_daily,
         total_daily_change_pct=total_daily_pct,
         total_cost_basis_ars=total_cost,
