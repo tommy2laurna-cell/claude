@@ -13,10 +13,6 @@ class Config:
 
     portfolio_path: Path = field(default_factory=lambda: Path("portfolio.json"))
 
-    run_hour: int = 17
-    run_minute: int = 30
-    timezone: str = "America/Argentina/Buenos_Aires"
-
     news_max_items: int = 3
 
     # Email
